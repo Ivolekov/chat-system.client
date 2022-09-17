@@ -23,6 +23,7 @@ const Login = (props: { setName: (name: string) => void }) => {
         setRedirect(true);
         props.setName(content.username);
         localStorage.setItem("token", content.token)
+        localStorage.setItem("username", content.username)
     }
     useEffect(() => {
         var main = document.getElementsByTagName("main")[0];

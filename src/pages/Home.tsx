@@ -35,7 +35,6 @@ const Home = (props: { name: string }) => {
             let objStr = JSON.stringify(obj);
             let messageObj = JSON.parse(objStr);
             setMessages(messages => [...messages, {text:messageObj.text,receiverName:messageObj.receiverName,senderName:messageObj.senderName,timestamp:messageObj.timestamp}]);
-            console.log(messages)
           });
 
         connection.on("receiveOnlineUsernames", addOnlineUsers);
@@ -64,7 +63,9 @@ const Home = (props: { name: string }) => {
             senderName
         });
         let messageObj = JSON.parse(messageStrObj);
+        
         setMessages(messages => [...messages, {text:messageObj.text,receiverName:messageObj.receiverName,senderName:messageObj.senderName,timestamp:messageObj.timestamp}]);
+        
         connection.invoke("sendMessage", JSON.parse(messageStrObj));
     }
 
@@ -80,44 +81,23 @@ const Home = (props: { name: string }) => {
     let usersHtml;
     if(localStorage.getItem('token')){
     usersHtml = (<div className="users">
-                <h3>Users in the system</h3>
+                <h3>User list</h3>
                 <ul className='list-group'>
                     { Object.entries(onlineUsers).map(([username,value], idx) => {
-                        return  <li className='list-group-item d-flex justify-content-between align-items-center hover-user' onClick={()=>{activateSendMessage({username})}} connection-id={value} key={idx}>{username}
+                        if (props.name !== username) {
+                            return  <li className='list-group-item d-flex justify-content-between align-items-center hover-user' onClick={()=>{activateSendMessage({username})}} connection-id={value} key={idx}>{username}
                             <span className="badge badge-primary badge-pill"></span>
                         </li>
+                        }
                     })}
                 </ul>
             </div>)
     }
 
-    let messageForm;
-    if (showMessageForm) {
-        messageForm =(<form onSubmit={e=>{
-                e.preventDefault();
-                sendMessageToHub(message);
-                setMessage('');
-            }}>
-            <div>
-                <input type="text" className="form-control send-msg-input" placeholder="Type a message..." required onChange={e => setMessage(e.target.value)} value={message}/>
-                <button className="w-100 btn btn-lg btn-primary send-msg-btn" type="submit" disabled={!message}>Send</button>
-            </div>
-        </form>)
-    }
-
-    useEffect(() => {
-        getUsers();
-        var main = document.getElementsByTagName("main")[0];
-        main.classList.add('home');
-        main.classList.remove('form-signin');
-        }, []);
-        
-    return (
-        <div>
-            {props.name ? <h5>Hi {props.name}</h5> : 'You are not logged in'}
-                <div className='grid-container'>
-                    {usersHtml}
-                    <div className='chat'>{messages.map((m, index) => {
+    let chat;
+    if (localStorage.getItem('token')) {
+        chat = (
+                <div className='chat'>{messages.map((m, index) => {
                         if (m.senderName === props.name) {
                             let date = new Date();
                             let ampm =  date.getHours() >= 12 ? 'pm' : 'am';
@@ -139,9 +119,37 @@ const Home = (props: { name: string }) => {
                                 <h6 className='receiver-chat' key={index}>{m.text}</h6>
                             </div>
                         }
-                            
                         })}
                 </div>
+        )
+    }
+    let messageForm;
+    if (showMessageForm && localStorage.getItem('token')) {
+        messageForm =(<form onSubmit={e=>{
+                e.preventDefault();
+                sendMessageToHub(message);
+                setMessage('');
+            }}>
+            <div>
+                <input type="text" className="form-control send-msg-input" placeholder="Type a message..." required onChange={e => setMessage(e.target.value)} value={message}/>
+                <button className="w-100 btn btn-lg btn-primary send-msg-btn" type="submit" disabled={!message}>Send</button>
+            </div>
+        </form>)
+    }
+
+    useEffect(() => {
+        getUsers();
+        var main = document.getElementsByTagName("main")[0];
+        main.classList.add('home');
+        main.classList.remove('form-signin');
+        }, []);
+        
+    return (
+        <div>
+            {localStorage.getItem('token') ? <h5>Hi {localStorage.getItem('username')}</h5> : 'You are not logged in'}
+                <div className='grid-container'>
+                    {usersHtml}
+                    {chat}
             </div> 
             {messageForm}
         </div>)

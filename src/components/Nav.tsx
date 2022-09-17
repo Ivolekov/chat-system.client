@@ -3,6 +3,8 @@ import {Link} from "react-router-dom";
 const Nav = () => {
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        window.location.reload();
     }
     let menu;
 

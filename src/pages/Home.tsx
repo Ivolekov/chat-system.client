@@ -14,6 +14,7 @@ const Home = (props: { name: string }) => {
     const [message, setMessage] = useState('');
     const [showMessageForm, setShowMessageForm] = useState(false);
     const [receiverUsername, setReceiverUsername] = useState('');
+    const [btnUserState, setBtnUserState] = useState('');
 
     const getUsers = async () => {
     if(localStorage.getItem('token')){
@@ -64,7 +65,7 @@ const Home = (props: { name: string }) => {
         });
         let messageObj = JSON.parse(messageStrObj);
         
-        setMessages(messages => [...messages, {text:messageObj.text,receiverName:messageObj.receiverName,senderName:messageObj.senderName,timestamp:messageObj.timestamp}]);
+        setMessages(messages => [...messages, {text:messageObj.text, receiverName:messageObj.receiverName, senderName:messageObj.senderName, timestamp:messageObj.timestamp}]);
         
         connection.invoke("sendMessage", JSON.parse(messageStrObj));
     }
@@ -85,7 +86,8 @@ const Home = (props: { name: string }) => {
                 <ul className='list-group'>
                     { Object.entries(onlineUsers).map(([username,value], idx) => {
                         if (props.name !== username) {
-                            return  <li className='list-group-item d-flex justify-content-between align-items-center hover-user' onClick={()=>{activateSendMessage({username})}} connection-id={value} key={idx}>{username}
+                            return  <li className={`list-group-item d-flex justify-content-between align-items-center hover-user ${btnUserState === username ? 'user-mark' : ''}`} 
+                             onClick={()=>{activateSendMessage({username}); setBtnUserState(username)}} connection-id={value} user-name={username} key={idx}>{username}
                             <span className="badge badge-primary badge-pill"></span>
                         </li>
                         }
@@ -104,9 +106,9 @@ const Home = (props: { name: string }) => {
                             let month = date.getMonth() + 1;
                             let formatedDateTime = date.getDate() + '.' + month + '.' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes()+ampm
 
-                            return <div>
-                                <div className='datetime text-alighn-end'>{formatedDateTime}</div>
-                                <h6 className='sender-chat' key={index}>{m.text}</h6>
+                            return <div  key={index}>
+                                <div className='datetime text-alighn-end'>{m.senderName} {formatedDateTime}</div>
+                                <h6 className='sender-chat'>{m.text}</h6>
                             </div>
                         } else {
                             let date =new Date(m.timestamp);
@@ -114,15 +116,16 @@ const Home = (props: { name: string }) => {
                             let month = date.getMonth() + 1;
                             let formatedDateTime = date.getDate() + '.' + month + '.' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes()+ampm
 
-                            return <div>
-                                <div className='datetime'>{formatedDateTime}</div>
-                                <h6 className='receiver-chat' key={index}>{m.text}</h6>
+                            return <div key={index}>
+                                <div className='datetime'>{m.senderName} {formatedDateTime}</div>
+                                <h6 className='receiver-chat'>{m.text}</h6>
                             </div>
                         }
                         })}
                 </div>
         )
     }
+
     let messageForm;
     if (showMessageForm && localStorage.getItem('token')) {
         messageForm =(<form onSubmit={e=>{
